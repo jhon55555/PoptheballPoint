@@ -1,10 +1,10 @@
-﻿using Poptheball.Helpers;
+﻿using Snakes.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using Models.Poptheball;
+using Models.Snakes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Services.Common;
-using Services.Poptheball;
+using Services.Snakes;
 using Services.Jwt;
 using System;
 using System.Data;
@@ -15,25 +15,24 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Poptheball.Controllers
+namespace Snakes.Controllers
 {
 
     [ApiController]
     [Route("api/game")]
-    public class PoptheballController : ControllerBase
+    public class SnakesController : ControllerBase
     {//test
         private readonly ITokenManager _tokenManager;
         private readonly IJwtHandler _jwtHandler;
-        private readonly IPoptheballService _popballservice;
+        private readonly ISnakesService _popballservice;
         private readonly ErrorLog _Elog;
         private readonly HttpHelper _httpHelper;
         private readonly Config _config;
         //private readonly IHostingEnvironment _env;ajksd
-        public PoptheballController(ITokenManager tokenManager, IJwtHandler jwtHandler, /*IHostingEnvironment env,*/ IPoptheballService popballservice, ErrorLog Elog, Config config, HttpHelper httpHelper)
+        public SnakesController(ITokenManager tokenManager, IJwtHandler jwtHandler, /*IHostingEnvironment env,*/ ISnakesService popballservice, ErrorLog Elog, Config config, HttpHelper httpHelper)
         {
             _tokenManager = tokenManager;
             _jwtHandler = jwtHandler;
-            //_env = env;
             _popballservice = popballservice;
             _Elog = Elog;
             _config = config;
@@ -106,68 +105,6 @@ namespace Poptheball.Controllers
 
             return result;
         }
-        //[Route("start")]
-        //public async Task<IActionResult> Start([FromBody] Start start)
-        //{
-        //    try
-        //    {
-        //        //var json = JsonConvert.Serialize({
-        //        //PlayerId: string
-        //        //PlayerName: string});
-
-        //        _Elog.WriteLogAll("Start", JsonConvert.SerializeObject(start));
-        //        var balde = EncryptString(JsonConvert.SerializeObject(start), _config.Secret);
-        //        var res1 = DecryptString(balde, _config.Secret);
-
-
-        //        var par = new
-        //        {
-        //            Body = balde
-        //        };
-        //        var response = _httpHelper.Post("https://ball-api.shub.casino/api/game/start", JsonConvert.SerializeObject(par), "application/json", "POST", "f13bf0d8-dbad-4c83-b1bd-62f24d22cf89");
-        //        var obj = JsonConvert.DeserializeObject<Startres>(response);
-        //        return Return200("Success", obj);
-
-        //        //string u_id = string.Empty;
-        //        //var header = Request.Headers["Authorization"].ToString();
-        //        //if (header != null)
-        //        //{
-        //        //    u_id = _jwtHandler.GetSaGuid(header);
-        //        //}
-
-        //        //Guid uu_id;
-        //        //bool res = Guid.TryParse(u_id, out uu_id);
-
-        //        //if (!res)
-        //        //    return Return300("token not valid.");
-        //        //userLogin.guid = uu_id;
-        //        //var Response = await _popballservice.BalanceCallback(balanceCallback);
-        //        //if (Response != null && Response.Tables.Count > 0 && Response.Tables[Response.Tables.Count - 1].Columns.Contains("id") && Response.Tables[Response.Tables.Count - 1].Rows[0]["id"].ToString() == "-1")
-        //        //{
-        //        //    _Elog.WriteLog("UserLogin", JsonConvert.SerializeObject(balanceCallback), Response.Tables[Response.Tables.Count - 1].Rows[0]["MSG"].ToString());
-        //        //    return Return400("Data Error");
-        //        //}
-        //        //if (Response == null || Response.Tables.Count <= 0)
-        //        //    return Return300("No Data Found.");
-        //        //if (Response.Tables[0].Rows.Count <= 0)
-        //        //    return Return300("No Record Found.");
-        //        //if (Response.Tables[0].Columns.Contains("id") && Response.Tables[0].Rows[0]["id"].ToString() == "0")
-        //        //    return Return300(Response.Tables[0].Rows[0]["MSG"].ToString());
-
-
-        //        //var t1 = new
-        //        //{
-        //        //    token = Response.Tables[0].Rows[0]["idval"],
-        //        //    url = string.IsNullOrEmpty(Response.Tables[0].Rows[0]["url"].ToString()) ? "" : Response.Tables[0].Rows[0]["url"]
-        //        //};
-        //        //return Return200("Success", t1);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _Elog.WriteLog("Start", ex.Message.ToString(), " : Req" + JsonConvert.SerializeObject(start));
-        //        return Return400(ex.Message);
-        //    }
-        //}
         [Route("balancecallback")]
         public async Task<IActionResult> BalanceCallback([FromBody] BalanceCallback balanceCallback)
         {
@@ -197,10 +134,11 @@ namespace Poptheball.Controllers
                     Balance = (!string.IsNullOrEmpty(Response.Tables[0].Rows[0]["general"].ToString()) ? Convert.ToDecimal(Response.Tables[0].Rows[0]["general"]) : 0) - (!string.IsNullOrEmpty(Response.Tables[0].Rows[0]["exposer"].ToString()) ? Convert.ToDecimal(Response.Tables[0].Rows[0]["exposer"]) : 0),
                     Currency = Response.Tables[0].Rows[0]["Currency"].ToString()
                 };
-                _Elog.WriteLogAll("BalanceCallbackResp", JsonConvert.SerializeObject(json));
                 var balde = EncryptString(JsonConvert.SerializeObject(json), _config.Secret);
-                var res1 = DecryptString(balde, _config.Secret);
+                _Elog.WriteLogAll("BalanceCallback+res1", balde);
 
+                var res1 = DecryptString(balde, _config.Secret);
+                _Elog.WriteLogAll("BalanceCallback+res1", JsonConvert.SerializeObject(res1));
                 return Ok(new { Body = balde });
 
             }
@@ -223,6 +161,7 @@ namespace Poptheball.Controllers
             //    var json = new
             //    {
             //        Balance = 1000.00,
+            //        ErrorCode =0
             //    };
             //    var balde = EncryptString(JsonConvert.SerializeObject(json), _config.Secret);
             //    var res1 = DecryptString(balde, _config.Secret);
@@ -244,7 +183,7 @@ namespace Poptheball.Controllers
                 var res = DecryptString(balanceCallback.Body, _config.Secret);
                 _Elog.WriteLogAll("BetUrl+1", res);
                 var obj = JsonConvert.DeserializeObject<BetUrlres>(res);
-                var TblData1 = await _popballservice.validuser(obj.PlayerId);
+                var TblData1 = await _popballservice.validuser(obj.PlayerId,obj.GameId);
                 _Elog.WriteLogAll("BetUrl+validuser : ", JsonConvert.SerializeObject(TblData1));
                 if (TblData1 != null && TblData1.Tables.Count > 0 && TblData1.Tables[0].Rows.Count > 0 && TblData1.Tables[0].Rows[0]["id"].ToString() == "1")
                 {
@@ -310,7 +249,6 @@ namespace Poptheball.Controllers
                 return Return400(ex.Message);
             }
         }
-
         [Route("betresult")]
         public async Task<IActionResult> BetResult([FromBody] BalanceCallback balanceCallback)
         {
@@ -327,7 +265,7 @@ namespace Poptheball.Controllers
             //    var json = new
             //    {
             //        Balance = 1000.00,
-            //        //PlayerName = "test"
+            //        ErrorCode = 0
             //    };
             //    var balde = EncryptString(JsonConvert.SerializeObject(json), _config.Secret);
             //    var res1 = DecryptString(balde, _config.Secret);
@@ -340,7 +278,6 @@ namespace Poptheball.Controllers
             //    _Elog.WriteLog("BetResult", ex.Message.ToString(), " : Req" + JsonConvert.SerializeObject(balanceCallback));
             //    return Return400(ex.Message);
             //}
-
             try
             {
                 long timeStamp = DateTime.Now.ToFileTime();
@@ -353,7 +290,7 @@ namespace Poptheball.Controllers
                 //_Elog.WriteLogAll("BetResult+validuser : ", JsonConvert.SerializeObject(TblData1));
                 //if (TblData1 != null && TblData1.Tables.Count > 0 && TblData1.Tables[0].Rows.Count > 0 && TblData1.Tables[0].Rows[0]["id"].ToString() == "1")
                 //{
-                var TblData = await _popballservice.credit(obj.PlayerId, obj.Session, obj.GameId, obj.RoundId, obj.Id, obj.Refference, obj.Odd, obj.Stake, obj.Win, 0, obj.Created, obj.Updated);
+                var TblData = await _popballservice.credit(obj.PlayerId, obj.Session, obj.GameId, obj.RoundId, obj.Id, obj.Reference, obj.Odd, obj.Stake, obj.Win, 0, obj.Created, obj.Updated);
                 _Elog.WriteLogAll("BetResult+credit : ", JsonConvert.SerializeObject(TblData));
                 if (TblData != null && TblData.Tables.Count > 0 && TblData.Tables[0].Rows.Count > 0 && TblData.Tables[0].Rows[0]["id"].ToString() == "0" && TblData.Tables[0].Rows[0]["istransfer"].ToString() == "1")
                 {
@@ -363,9 +300,9 @@ namespace Poptheball.Controllers
                     {
                         var json = new
                         {
+                            Currency = TblData2.Tables[0].Rows[0]["Currency"].ToString(),
                             ErrorCode = Convert.ToInt32(TblData.Tables[0].Rows[0]["id"]),
                             Balance = (!string.IsNullOrEmpty(TblData2.Tables[0].Rows[0]["general"].ToString()) ? Convert.ToDecimal(TblData2.Tables[0].Rows[0]["general"]) : 0) - (!string.IsNullOrEmpty(TblData2.Tables[0].Rows[0]["exposer"].ToString()) ? Convert.ToDecimal(TblData2.Tables[0].Rows[0]["exposer"]) : 0),
-                            Currency = TblData2.Tables[0].Rows[0]["Currency"].ToString()
                         };
                         _Elog.WriteLogAll("BetResult : ", JsonConvert.SerializeObject(json));
                         var balde = EncryptString(JsonConvert.SerializeObject(json), _config.Secret);
@@ -376,9 +313,9 @@ namespace Poptheball.Controllers
                     {
                         var json = new
                         {
+                            Currency = TblData2.Tables[0].Rows[0]["Currency"].ToString(),
                             ErrorCode = Convert.ToInt32(TblData.Tables[0].Rows[0]["id"]),
                             Balance = (!string.IsNullOrEmpty(TblData.Tables[0].Rows[0]["general"].ToString()) ? Convert.ToDecimal(TblData.Tables[0].Rows[0]["general"]) : 0),
-                            //Currency = TblData.Tables[0].Rows[0]["Currency"].ToString()
                         };
                         _Elog.WriteLogAll("BetResult+3 : ", JsonConvert.SerializeObject(json));
                         var balde1 = EncryptString(JsonConvert.SerializeObject(json), _config.Secret);
@@ -392,9 +329,9 @@ namespace Poptheball.Controllers
                     var TblData3 = await _popballservice.getcheckbalance(obj.PlayerId);
                     var json = new
                     {
+                        Currency = TblData3.Tables[0].Rows[0]["Currency"].ToString(),
                         ErrorCode = TblData != null && TblData.Tables.Count > 0 && TblData.Tables[0].Rows.Count > 0 && TblData.Tables[0].Columns.Contains("id") ? Convert.ToInt32(TblData.Tables[0].Rows[0]["id"]) : 1,
                         Balance = TblData3 != null && TblData3.Tables.Count > 0 && TblData3.Tables[0].Rows.Count > 0 && TblData3.Tables[0].Columns.Contains("general") ? (!string.IsNullOrEmpty(TblData3.Tables[0].Rows[0]["general"].ToString()) ? Convert.ToDecimal(TblData3.Tables[0].Rows[0]["general"]) : 0) - (!string.IsNullOrEmpty(TblData3.Tables[0].Rows[0]["exposer"].ToString()) ? Convert.ToDecimal(TblData3.Tables[0].Rows[0]["exposer"]) : 0) : 0,
-                        Currency = TblData3.Tables[0].Rows[0]["Currency"].ToString()
                     };
                     _Elog.WriteLogAll("BetResult : ", JsonConvert.SerializeObject(json));
                     var balde1 = EncryptString(JsonConvert.SerializeObject(json), _config.Secret);
@@ -416,6 +353,32 @@ namespace Poptheball.Controllers
         [Route("rollback")]
         public async Task<IActionResult> Rollback([FromBody] BalanceCallback balanceCallback)
         {
+            //try
+            //{
+            //    //var json = JsonConvert.Serialize({
+            //    //PlayerId: string
+            //    //PlayerName: string});
+            //    long timeStamp = DateTime.Now.ToFileTime();
+            //    Response.Headers.Add("X-Timestamp", timeStamp.ToString());
+            //    _Elog.WriteLogAll("BetResult", JsonConvert.SerializeObject(balanceCallback));
+            //    var res = DecryptString(balanceCallback.Body, _config.Secret);
+            //    _Elog.WriteLogAll("BetResult+1", res);
+            //    var json = new
+            //    {
+            //        Balance = 1000.00,
+            //        ErrorCode = 0
+            //    };
+            //    var balde = EncryptString(JsonConvert.SerializeObject(json), _config.Secret);
+            //    var res1 = DecryptString(balde, _config.Secret);
+
+            //    return Ok(new { Body = balde });
+
+            //}
+            //catch (Exception ex)
+            //{
+            //    _Elog.WriteLog("BetResult", ex.Message.ToString(), " : Req" + JsonConvert.SerializeObject(balanceCallback));
+            //    return Return400(ex.Message);
+            //}
             try
             {
                 long timeStamp = DateTime.Now.ToFileTime();
@@ -428,7 +391,7 @@ namespace Poptheball.Controllers
                 //_Elog.WriteLogAll("Rollback+validuser : ", JsonConvert.SerializeObject(TblData1));
                 //if (TblData1 != null && TblData1.Tables.Count > 0 && TblData1.Tables[0].Rows.Count > 0 && TblData1.Tables[0].Rows[0]["id"].ToString() == "1")
                 //{
-                var TblData = await _popballservice.Rollback(obj.PlayerId, obj.Session, obj.GameId, obj.RoundId, obj.Id, obj.Refference, obj.Odd, obj.Stake, obj.Win,0, obj.Created, obj.Updated);
+                var TblData = await _popballservice.Rollback(obj.PlayerId, obj.Session, obj.GameId, obj.RoundId, obj.Id, obj.Reference, obj.Odd, obj.Stake, obj.Win, 0, obj.Created, obj.Updated);
                 _Elog.WriteLogAll("Rollback+Rollback : ", JsonConvert.SerializeObject(TblData));
                 if (TblData != null && TblData.Tables.Count > 0 && TblData.Tables[0].Rows.Count > 0 && TblData.Tables[0].Rows[0]["id"].ToString() == "0" && TblData.Tables[0].Rows[0]["istransfer"].ToString() == "1")
                 {
@@ -438,9 +401,9 @@ namespace Poptheball.Controllers
                     {
                         var json = new
                         {
+                            Currency = "Inr",
                             ErrorCode = Convert.ToInt32(TblData.Tables[0].Rows[0]["id"]),
                             Balance = (!string.IsNullOrEmpty(TblData2.Tables[0].Rows[0]["general"].ToString()) ? Convert.ToDecimal(TblData2.Tables[0].Rows[0]["general"]) : 0) - (!string.IsNullOrEmpty(TblData2.Tables[0].Rows[0]["exposer"].ToString()) ? Convert.ToDecimal(TblData2.Tables[0].Rows[0]["exposer"]) : 0),
-                            Currency = TblData2.Tables[0].Rows[0]["Currency"].ToString()
                         };
                         _Elog.WriteLogAll("Rollback : ", JsonConvert.SerializeObject(json));
                         var balde = EncryptString(JsonConvert.SerializeObject(json), _config.Secret);
@@ -451,9 +414,9 @@ namespace Poptheball.Controllers
                     {
                         var json = new
                         {
+                            Currency = "Inr",
                             ErrorCode = Convert.ToInt32(TblData.Tables[0].Rows[0]["id"]),
                             Balance = (!string.IsNullOrEmpty(TblData.Tables[0].Rows[0]["general"].ToString()) ? Convert.ToDecimal(TblData.Tables[0].Rows[0]["general"]) : 0),
-                            //Currency = TblData.Tables[0].Rows[0]["Currency"].ToString()
                         };
                         _Elog.WriteLogAll("Rollback+3 : ", JsonConvert.SerializeObject(json));
                         var balde1 = EncryptString(JsonConvert.SerializeObject(json), _config.Secret);
@@ -467,9 +430,9 @@ namespace Poptheball.Controllers
                     var TblData3 = await _popballservice.getcheckbalance(obj.PlayerId);
                     var json = new
                     {
+                        Currency = "Inr",
                         ErrorCode = TblData != null && TblData.Tables.Count > 0 && TblData.Tables[0].Rows.Count > 0 && TblData.Tables[0].Columns.Contains("id") ? Convert.ToInt32(TblData.Tables[0].Rows[0]["id"]) : 1,
                         Balance = TblData3 != null && TblData3.Tables.Count > 0 && TblData3.Tables[0].Rows.Count > 0 && TblData3.Tables[0].Columns.Contains("general") ? (!string.IsNullOrEmpty(TblData3.Tables[0].Rows[0]["general"].ToString()) ? Convert.ToDecimal(TblData3.Tables[0].Rows[0]["general"]) : 0) - (!string.IsNullOrEmpty(TblData3.Tables[0].Rows[0]["exposer"].ToString()) ? Convert.ToDecimal(TblData3.Tables[0].Rows[0]["exposer"]) : 0) : 0,
-                        Currency = TblData3.Tables[0].Rows[0]["Currency"].ToString()
                     };
                     _Elog.WriteLogAll("Rollback : ", JsonConvert.SerializeObject(json));
                     var balde1 = EncryptString(JsonConvert.SerializeObject(json), _config.Secret);

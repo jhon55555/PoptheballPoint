@@ -1,0 +1,167 @@
+﻿using Data;
+using Newtonsoft.Json;
+using Services.Common;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Threading.Tasks;
+
+namespace Services.Snakes
+{
+    public class SnakesService : ISnakesService
+    {
+        #region Fields
+
+        private readonly ISqlClient _sqlClient;
+        private readonly Config _config;
+        private readonly ErrorLogService _errorLogService;
+        #endregion
+        public SnakesService(ISqlClient sqlClient, Config config, ErrorLogService errorLogService)
+        {
+            _config = config;
+            _sqlClient = sqlClient;
+            _errorLogService = errorLogService;
+
+        }
+
+        public async Task<DataSet> validuser(String uid, String gmid)
+        {
+            try
+            {
+                DataSet ds = new DataSet();
+                var parameters = new List<SqlParameter>();
+                parameters.Add(new SqlParameter() { ParameterName = "Userid", Value = uid });
+                parameters.Add(new SqlParameter() { ParameterName = "CasinoType", Value = gmid });
+                parameters.Add(new SqlParameter() { ParameterName = "statement", Value = "placebetcheck" });
+                ds = await _sqlClient.Executeasync("tpCasino_PlacebetCheck", _config.Conn_AccD, parameters);
+                return ds;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public async Task<DataSet> getcheckbalance(String uid)
+        {
+            try
+            {
+                DataSet ds = new DataSet();
+                var parameters = new List<SqlParameter>();
+                parameters.Add(new SqlParameter() { ParameterName = "Userid", Value = uid });
+                parameters.Add(new SqlParameter() { ParameterName = "CasinoType", Value = "snakes-and-ladders" });
+                parameters.Add(new SqlParameter() { ParameterName = "statement", Value = "getbalance" });
+                ds = await _sqlClient.Executeasync("tpCasino_PlacebetCheck", _config.Conn_AccD, parameters);
+                return ds;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public async Task<DataSet> debit(String uid, String token, String gameId, String roundId, String tid, String rate, String amt, String wl, Double gen, String pdt, String udt)
+        {
+            try
+            {
+                DataSet ds = new DataSet();
+                var parameters = new List<SqlParameter>();
+                parameters.Add(new SqlParameter() { ParameterName = "guid", Value = uid });
+                parameters.Add(new SqlParameter() { ParameterName = "token", Value = token });
+                parameters.Add(new SqlParameter() { ParameterName = "gameid", Value = gameId });
+                parameters.Add(new SqlParameter() { ParameterName = "roundid", Value = roundId });
+                parameters.Add(new SqlParameter() { ParameterName = "txnid", Value = tid });
+                parameters.Add(new SqlParameter() { ParameterName = "rate", Value = rate });
+                parameters.Add(new SqlParameter() { ParameterName = "amount", Value = amt });
+                parameters.Add(new SqlParameter() { ParameterName = "winloss", Value = wl });
+                parameters.Add(new SqlParameter() { ParameterName = "general", Value = gen });
+                parameters.Add(new SqlParameter() { ParameterName = "placedate", Value = pdt });
+                parameters.Add(new SqlParameter() { ParameterName = "updatedate", Value = udt });
+                parameters.Add(new SqlParameter() { ParameterName = "statement", Value = "debit" });
+                ds = await _sqlClient.Executeasync("fantasy_placebet", _config.Conn_CasinoMaster, parameters);
+                return ds;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public async Task<DataSet> credit(String uid, String token, String gameId, String roundId, String tid, String renid, String rate, String amt, String wl, Double gen, String pdt, String udt)
+        {
+            try
+            {//@guid,@token,@gameid,@roundid,@txnid,@referenceid,@rate,@amount,@winloss,@general,@placedate,@updatedate
+                DataSet ds = new DataSet();
+                var parameters = new List<SqlParameter>();
+                parameters.Add(new SqlParameter() { ParameterName = "guid", Value = uid });
+                parameters.Add(new SqlParameter() { ParameterName = "token", Value = token });
+                parameters.Add(new SqlParameter() { ParameterName = "gameid", Value = gameId });
+                parameters.Add(new SqlParameter() { ParameterName = "roundid", Value = roundId });
+                parameters.Add(new SqlParameter() { ParameterName = "txnid", Value = tid });
+                parameters.Add(new SqlParameter() { ParameterName = "referenceid", Value = renid });
+                parameters.Add(new SqlParameter() { ParameterName = "rate", Value = rate });
+                parameters.Add(new SqlParameter() { ParameterName = "amount", Value = amt });
+                parameters.Add(new SqlParameter() { ParameterName = "winloss", Value = wl });
+                parameters.Add(new SqlParameter() { ParameterName = "general", Value = gen });
+                parameters.Add(new SqlParameter() { ParameterName = "placedate", Value = pdt });
+                parameters.Add(new SqlParameter() { ParameterName = "updatedate", Value = udt });
+                parameters.Add(new SqlParameter() { ParameterName = "statement", Value = "credit" });
+                ds = await _sqlClient.Executeasync("fantasy_placebet", _config.Conn_CasinoMaster, parameters);
+                _errorLogService.WriteLog("credit+fantasy_placebet+credit", renid + "Res:" + JsonConvert.SerializeObject(ds));
+                return ds;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public async Task<DataSet> Rollback(String uid, String token, String gameId, String roundId, String tid, String renid, String rate, String amt, String wl, Double gen, String pdt, String udt)
+        {
+            try
+            {//@guid,@token,@gameid,@roundid,@txnid,@referenceid,@rate,@amount,@winloss,@general,@placedate,@updatedate
+                DataSet ds = new DataSet();
+                var parameters = new List<SqlParameter>();
+                parameters.Add(new SqlParameter() { ParameterName = "guid", Value = uid });
+                parameters.Add(new SqlParameter() { ParameterName = "token", Value = token });
+                parameters.Add(new SqlParameter() { ParameterName = "gameid", Value = gameId });
+                parameters.Add(new SqlParameter() { ParameterName = "roundid", Value = roundId });
+                parameters.Add(new SqlParameter() { ParameterName = "txnid", Value = tid });
+                parameters.Add(new SqlParameter() { ParameterName = "referenceid", Value = renid });
+                parameters.Add(new SqlParameter() { ParameterName = "rate", Value = rate });
+                parameters.Add(new SqlParameter() { ParameterName = "amount", Value = amt });
+                parameters.Add(new SqlParameter() { ParameterName = "winloss", Value = wl });
+                parameters.Add(new SqlParameter() { ParameterName = "general", Value = gen });
+                parameters.Add(new SqlParameter() { ParameterName = "placedate", Value = pdt });
+                parameters.Add(new SqlParameter() { ParameterName = "updatedate", Value = udt });
+                parameters.Add(new SqlParameter() { ParameterName = "statement", Value = "rollback" });
+                ds = await _sqlClient.Executeasync("fantasy_placebet", _config.Conn_CasinoMaster, parameters);
+                _errorLogService.WriteLog("Rollback+fantasy_placebet+rollback", renid + "Res:" + JsonConvert.SerializeObject(ds));
+                return ds;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public async Task<DataSet> UpdateAC(String uid, String amount, String json, String general, String ctype)
+        {
+            try
+            {
+                DataSet ds = new DataSet();
+                var parameters = new List<SqlParameter>();
+                parameters.Add(new SqlParameter() { ParameterName = "Userid", Value = uid });
+                parameters.Add(new SqlParameter() { ParameterName = "Amount", Value = amount });
+                parameters.Add(new SqlParameter() { ParameterName = "AdminJson", Value = json });
+                parameters.Add(new SqlParameter() { ParameterName = "CommonGeneral", Value = general });
+                parameters.Add(new SqlParameter() { ParameterName = "CasinoType", Value = ctype });
+                ds = await _sqlClient.Executeasync("tpBalanceUpdate", _config.Conn_AccD, parameters);
+                _errorLogService.WriteLog("UpdateAC+tpBalanceUpdate+rollback", uid + "|a" + amount + "|J" + json + "|g" + general + "|C|" + ctype + "Res:" + JsonConvert.SerializeObject(ds));
+                return ds;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+    }
+}
